@@ -23,31 +23,50 @@ app.get("/api/hello", function (req, res) {
   res.json({ greeting: "hello API" });
 });
 
+app.get("/api", (req, res) => {
+  const currentDate = new Date();
+  const unixTime = currentDate.getTime();
+  const utcDate = currentDate.toUTCString();
+  return res.json({ unix: unixTime, utc: utcDate });
+});
+
 app.get("/api/:value", (req, res) => {
   const { value } = req.params;
 
-  // Check if the value represents a valid number (timestamp)
-  if (!isNaN(value)) {
-    const unixTime = Number(value);
-    if (!isNaN(unixTime)) {
-      const date = new Date(unixTime);
-      if (!isNaN(date.getTime())) {
-        const utcDate = date.toUTCString();
-        return res.json({ unix: unixTime, utc: utcDate });
-      }
-    }
+  // Check if the value is empty
+  if (!value) {
+    // If the value is empty, set the current time
+    const currentDate = new Date();
+    const unixTime = currentDate.getTime();
+    const utcDate = currentDate.toUTCString();
+    return res.json({ unix: unixTime, utc: utcDate });
   }
 
-  // Check if the value represents a valid date
+  // Check if the value is a valid date
   const parsedDate = new Date(value);
   if (!isNaN(parsedDate.getTime())) {
+    // If it's a valid date, return the corresponding UNIX timestamp and UTC string
     const unixTime = parsedDate.getTime();
     const utcDate = parsedDate.toUTCString();
     return res.json({ unix: unixTime, utc: utcDate });
   }
 
-  // If the value is neither a timestamp nor a valid date, return an error
-  return res.status(400).json({ error: "Invalid input" });
+  // Check if the value is a valid timestamp
+  const timestamp = Number(value);
+  if (!isNaN(timestamp)) {
+    // If it's a valid timestamp, create a Date object using the timestamp
+    const date = new Date(timestamp);
+
+    // Check if the Date object is valid
+    if (!isNaN(date.getTime())) {
+      // If it's a valid date, return the corresponding UTC string
+      const utcDate = date.toUTCString();
+      return res.json({ unix: timestamp, utc: utcDate });
+    }
+  }
+
+  // If the value is neither a valid date nor a valid timestamp, return an error
+  res.status(400).json({ error: "Invalid Date" });
 });
 
 var listener = app.listen(process.env.PORT || 3000, function () {
